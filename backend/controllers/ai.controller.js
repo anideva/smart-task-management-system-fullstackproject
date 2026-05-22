@@ -11,11 +11,12 @@ const generateSubtasks = async (req, res) => {
       deadline,
     });
 
+    console.log(subtasks);
     res.status(200).json(subtasks);
 
   } catch (error) {
 
-    console.error(error);
+    console.error("CONTROLLER ERROR:", error);
 
     res.status(500).json({
       message: "Failed to generate subtasks",

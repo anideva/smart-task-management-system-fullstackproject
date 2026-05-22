@@ -10,7 +10,9 @@ const generateSubtasksAI = async ({
   deadline,
 }) => {
 
-  const prompt = `
+  try {
+
+    const prompt = `
 You are a productivity assistant.
 
 Break the following task into 3 to 7 actionable subtasks.
@@ -26,12 +28,25 @@ Description: ${description}
 Deadline: ${deadline}
 `;
 
-  const response = await ai.models.generateContent({
-    model: "gemini-2.0-flash",
-    contents: prompt,
-  });
+    const response = await ai.models.generateContent({
+      model: "gemini-2.0-flash",
+      contents: prompt,
+    });
 
-  return JSON.parse(response.text);
+   return JSON.parse(response.text());
+
+  } catch (error) {
+
+    console.log("Gemini failed. Using fallback subtasks.");
+
+    return [
+      `Plan ${taskTitle}`,
+      `Research requirements for ${taskTitle}`,
+      `Implement core functionality`,
+      `Test and debug ${taskTitle}`,
+      `Finalize and review implementation`
+    ];
+  }
 };
 
 module.exports = {

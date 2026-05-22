@@ -1,8 +1,4 @@
-const { GoogleGenAI } = require("@google/genai");
-
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY,
-});
+const axios = require("axios");
 
 const generateSubtasksAI = async ({
   taskTitle,
@@ -13,38 +9,51 @@ const generateSubtasksAI = async ({
   try {
 
     const prompt = `
-You are a productivity assistant.
-
-Break the following task into 3 to 7 actionable subtasks.
-
-Rules:
-- Start each subtask with a verb
-- Keep them practical
-- Keep them concise
-- Return ONLY a JSON array
+Break the following task into 5 actionable subtasks.
 
 Task: ${taskTitle}
 Description: ${description}
 Deadline: ${deadline}
+
+Return only a JSON array.
 `;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash",
-      contents: prompt,
-    });
+    const response = await axios.post(
+      "https://openrouter.ai/api/v1/chat/completions",
+      {
+       model: "mistralai/mistral-7b-instruct:free",
 
-   return JSON.parse(response.text());
+        messages: [
+          {
+            role: "user",
+            content: prompt,
+          },
+        ],
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    const text =
+      response.data.choices[0].message.content;
+
+    return JSON.parse(text);
 
   } catch (error) {
 
-    console.log("Gemini failed. Using fallback subtasks.");
+   console.log(error.response?.data || error.message);
+  console.log("OpenRouter failed. Using fallback.");
 
     return [
       `Plan ${taskTitle}`,
       `Research requirements for ${taskTitle}`,
       `Implement core functionality`,
       `Test and debug ${taskTitle}`,
-      `Finalize and review implementation`
+      `Finalize and review implementation`,
     ];
   }
 };
